@@ -45,15 +45,17 @@ result/
 *.png
 *.jpg
 *.jpeg
-*.pdf
 *.npy
 *.npz
+# Allow PDFs in doc folder
+!doc/*.pdf
 
 # Logs
 *.log
 *.txt
 !requirements.txt
 !README.md
+!doc/*.txt
 
 # Environment variables
 .env
