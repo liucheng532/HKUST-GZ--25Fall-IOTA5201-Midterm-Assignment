@@ -143,7 +143,7 @@ The algorithm typically achieves:
 
 ## 👤 Author
 
-HKUST-GZ IOTA5201 Midterm Assignment
+liucheng：cliu425@connect.hkust-gz.edu.cn
 
 ## 📄 License
 
