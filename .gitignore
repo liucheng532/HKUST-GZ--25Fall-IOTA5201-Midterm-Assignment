@@ -41,13 +41,16 @@ conda-env/
 *.ipynb_checkpoints/
 
 # Results and outputs
-result/
+# Allow result folder and its contents to be tracked
+# Commented out: result/
 *.png
 *.jpg
 *.jpeg
 *.npy
 *.npz
-# Allow PDFs in doc folder
+# But allow all files in result and doc folders
+!result/
+!result/**/*
 !doc/*.pdf
 
 # Logs
