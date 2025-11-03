@@ -1,5 +1,4 @@
 \documentclass[12pt,a4paper]{article}
-\usepackage[UTF8]{ctex}
 \usepackage{amsmath}
 \usepackage{graphicx}
 \usepackage{hyperref}
@@ -12,7 +11,7 @@
 
 \geometry{left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm}
 
-% 代码样式
+% Code style
 \lstset{
     language=Python,
     basicstyle=\ttfamily\small,
@@ -26,7 +25,7 @@
     captionpos=b
 }
 
-\title{Q-Learning算法在网格环境中的应用与实验分析}
+\title{Q-Learning Algorithm for Grid Environment:\\Experimentation and Analysis}
 \author{liucheng\\cliu425@connect.hkust-gz.edu.cn}
 \date{\today}
 
@@ -34,125 +33,125 @@
 
 \maketitle
 
-\section{引言}
+\section{Introduction}
 
-\subsection{Q-Learning算法及其意义}
+\subsection{Q-Learning Algorithm and Its Significance}
 
-Q-Learning是一种无模型的强化学习算法，由Watkins在1989年提出\cite{watkins1989learning}。它是时序差分（Temporal Difference, TD）学习的一种，通过学习一个动作价值函数$Q(s,a)$来找到最优策略。
+Q-Learning is a model-free reinforcement learning algorithm proposed by Watkins in 1989 \cite{watkins1989learning}. It is a form of Temporal Difference (TD) learning that learns an action-value function $Q(s,a)$ to find the optimal policy.
 
-Q-Learning的核心更新公式为：
+The core update formula of Q-Learning is:
 \begin{equation}
 Q(s_t, a_t) \leftarrow Q(s_t, a_t) + \alpha \left[ r_{t+1} + \gamma \max_{a'} Q(s_{t+1}, a') - Q(s_t, a_t) \right]
 \end{equation}
 
-其中：
+where:
 \begin{itemize}
-    \item $\alpha$ 是学习率（learning rate），控制新信息对Q值的更新程度
-    \item $\gamma$ 是折扣因子（discount factor），表示对未来奖励的重视程度
-    \item $r_{t+1}$ 是执行动作后获得的即时奖励
-    \item $\max_{a'} Q(s_{t+1}, a')$ 是下一状态的最大Q值
+    \item $\alpha$ is the learning rate, controlling how much new information updates the Q-values
+    \item $\gamma$ is the discount factor, representing the importance of future rewards
+    \item $r_{t+1}$ is the immediate reward obtained after taking the action
+    \item $\max_{a'} Q(s_{t+1}, a')$ is the maximum Q-value of the next state
 \end{itemize}
 
-Q-Learning算法的重要意义在于：
+The significance of the Q-Learning algorithm lies in:
 \begin{enumerate}
-    \item \textbf{无模型学习}：不需要环境的转移概率模型，可以直接从经验中学习
-    \item \textbf{离线学习}：可以学习最优策略，而不需要遵循该策略（off-policy）
-    \item \textbf{收敛性保证}：在满足一定条件下，Q-Learning可以保证收敛到最优Q函数
-    \item \textbf{广泛应用}：适用于离散状态空间的决策问题，如路径规划、游戏AI等
+    \item \textbf{Model-free learning}: It does not require a transition probability model of the environment and can learn directly from experience
+    \item \textbf{Off-policy learning}: It can learn the optimal policy without following that policy
+    \item \textbf{Convergence guarantee}: Under certain conditions, Q-Learning can guarantee convergence to the optimal Q-function
+    \item \textbf{Wide applications}: It is suitable for decision problems in discrete state spaces, such as path planning and game AI
 \end{enumerate}
 
-在本次实验中，我们使用Q-Learning算法解决一个9×7网格环境中的路径规划问题，agent需要从起点移动到终点，同时避开危险区域（Holes）。
+In this experiment, we use the Q-Learning algorithm to solve a path planning problem in a 9×7 grid environment, where an agent needs to move from a start position to a goal position while avoiding dangerous areas (Holes).
 
-\section{环境与状态描述}
+\section{Environment and State Description}
 
-\subsection{环境设置}
+\subsection{Environment Setup}
 
-本实验使用的环境是基于Gymnasium的FrozenLake环境构建的自定义网格环境，具体参数如下：
+The environment used in this experiment is a custom grid environment based on Gymnasium's FrozenLake environment, with the following specifications:
 
 \begin{itemize}
-    \item \textbf{网格大小}：9列 × 7行（width = 9, height = 7）
-    \item \textbf{坐标系}：使用用户友好的1-based坐标系统，左下角为原点(1,1)，右上角为(9,7)
-    \item \textbf{状态空间}：共有63个状态（9 × 7），每个状态对应网格中的一个位置
-    \item \textbf{动作空间}：4个离散动作
+    \item \textbf{Grid size}: 9 columns × 7 rows (width = 9, height = 7)
+    \item \textbf{Coordinate system}: User-friendly 1-based coordinate system with bottom-left corner as origin (1,1) and top-right corner as (9,7)
+    \item \textbf{State space}: 63 states in total (9 × 7), where each state corresponds to a position in the grid
+    \item \textbf{Action space}: 4 discrete actions
     \begin{itemize}
-        \item 0 = LEFT（向左）
-        \item 1 = DOWN（向下）
-        \item 2 = RIGHT（向右）
-        \item 3 = UP（向上）
+        \item 0 = LEFT
+        \item 1 = DOWN
+        \item 2 = RIGHT
+        \item 3 = UP
     \end{itemize}
 \end{itemize}
 
-\subsection{环境特性}
+\subsection{Environment Characteristics}
 
-\subsubsection{Frozen Cells（危险区域）}
+\subsubsection{Frozen Cells (Hazardous Areas)}
 
-环境中共有14个Holes（危险区域），坐标为：
+The environment contains 14 Holes (hazardous areas) at the following coordinates:
 \begin{align*}
 \text{Holes} = \{ &(2,4), (3,2), (3,4), (4,4), (5,2), (5,4),\\
                   &(6,2), (6,4), (7,1), (7,2), (7,4), (7,6),\\
                   &(7,7), (8,6) \}
 \end{align*}
 
-当agent尝试进入Hole时，会被阻止移动，停留在当前位置，并获得小的负奖励（-0.01）以鼓励agent避免这些区域。
+When the agent attempts to enter a Hole, its movement is blocked and it remains at the current position, receiving a small negative reward (-0.01) to encourage the agent to avoid these areas.
 
-\subsubsection{奖励机制}
-
-\begin{itemize}
-    \item 到达目标状态（Goal）：奖励 +1.0
-    \item 进入Hole（被阻止）：奖励 -0.01
-    \item 其他移动：奖励 0.0
-\end{itemize}
-
-\subsubsection{动作执行}
-
-环境采用确定性动作执行（is\_slippery=False），即执行的动作会产生预期的结果，不存在随机性。
-
-\section{实验配置}
-
-\subsection{初始配置（Configuration 1）}
+\subsubsection{Reward Mechanism}
 
 \begin{itemize}
-    \item \textbf{起点（Start）}：$(6, 1)$
-    \item \textbf{终点（Goal）}：$(6, 7)$
-    \item \textbf{任务}：从位置(6,1)找到到达位置(6,7)的最优路径
+    \item Reaching the goal state: reward +1.0
+    \item Entering a Hole (blocked): reward -0.01
+    \item Other movements: reward 0.0
 \end{itemize}
 
-这是一个相对简单的路径规划任务，起点和终点位于同一列，agent需要向上移动，同时避开中间的Holes。
+\subsubsection{Action Execution}
 
-\subsection{改变配置（Configuration 2）}
+The environment uses deterministic action execution (is\_slippery=False), meaning that executed actions produce expected results without randomness.
+
+\section{Experimental Configuration}
+
+\subsection{Initial Configuration (Configuration 1)}
 
 \begin{itemize}
-    \item \textbf{起点（Position A）}：随机生成的安全位置
-    \item \textbf{终点（Position C）}：随机生成的安全位置（与A不同）
-    \item \textbf{任务}：从随机生成的起点A找到到达随机生成的终点C的最优路径
+    \item \textbf{Start position}: $(6, 1)$
+    \item \textbf{Goal position}: $(6, 7)$
+    \item \textbf{Task}: Find the optimal path from position (6,1) to position (6,7)
 \end{itemize}
 
-这种配置用于测试Q-Learning算法在不同起点和终点组合下的泛化能力和收敛性能。
+This is a relatively simple path planning task where the start and goal positions are in the same column, and the agent needs to move upward while avoiding Holes in between.
 
-\subsection{Q-Learning超参数}
+\subsection{Changed Configuration (Configuration 2)}
 
-实验中使用以下超参数配置：
+\begin{itemize}
+    \item \textbf{Start position (Position A)}: Randomly generated safe position
+    \item \textbf{Goal position (Position C)}: Randomly generated safe position (different from A)
+    \item \textbf{Task}: Find the optimal path from randomly generated start position A to randomly generated goal position C
+\end{itemize}
+
+This configuration tests the generalization ability and convergence performance of the Q-Learning algorithm with different start and goal position combinations.
+
+\subsection{Q-Learning Hyperparameters}
+
+The following hyperparameter configuration is used in the experiment:
 
 \begin{table}[H]
 \centering
-\caption{Q-Learning超参数设置}
+\caption{Q-Learning Hyperparameter Settings}
 \begin{tabular}{lc}
 \toprule
-参数 & 值 \\
+Parameter & Value \\
 \midrule
-学习率（Learning Rate, $\alpha$） & 0.8 \\
-折扣因子（Discount Factor, $\gamma$） & 0.95 \\
-初始探索率（Initial $\epsilon$） & 0.1 \\
-探索率衰减（$\epsilon$ Decay） & 0.995 \\
-最小探索率（$\epsilon$ Min） & 0.01 \\
-训练轮数（Episodes） & 5000 \\
+Learning Rate ($\alpha$) & 0.8 \\
+Discount Factor ($\gamma$) & 0.95 \\
+Initial Epsilon ($\epsilon$) & 0.1 \\
+Epsilon Decay & 0.995 \\
+Epsilon Min & 0.01 \\
+Training Episodes & 5000 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\subsubsection{探索策略}
+\subsubsection{Exploration Strategy}
 
-采用$\epsilon$-greedy策略进行动作选择：
+The $\epsilon$-greedy strategy is used for action selection:
 \begin{equation}
 a_t = \begin{cases}
 \text{random action} & \text{with probability } \epsilon \\
@@ -160,229 +159,229 @@ a_t = \begin{cases}
 \end{cases}
 \end{equation}
 
-探索率$\epsilon$在训练过程中从0.1逐渐衰减到0.01，平衡探索与利用。
+The exploration rate $\epsilon$ gradually decays from 0.1 to 0.01 during training, balancing exploration and exploitation.
 
-\section{Q表分析}
+\section{Q-Table Analysis}
 
-\subsection{初始配置的Q表}
+\subsection{Q-Table for Initial Configuration}
 
-初始配置下，训练完成后Q表的值反映了从起点(6,1)到终点(6,7)的最优路径的价值。
+Under the initial configuration, after training completion, the Q-table values reflect the value of the optimal path from start position (6,1) to goal position (6,7).
 
-Q表维度为$63 \times 4$（63个状态，每个状态4个动作）。训练完成后：
+The Q-table has dimensions of $63 \times 4$ (63 states, 4 actions per state). After training completion:
 \begin{itemize}
-    \item 非零Q值表示agent在训练过程中探索过的状态-动作对
-    \item Q值的大小反映了采取该动作后，能够获得的长期累积奖励
-    \item 每个状态的最优动作对应Q值最大的动作
+    \item Non-zero Q-values represent state-action pairs explored by the agent during training
+    \item The magnitude of Q-values reflects the long-term cumulative reward that can be obtained by taking that action
+    \item The optimal action for each state corresponds to the action with the highest Q-value
 \end{itemize}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.9\textwidth]{result/2025-1103-0021/qtable_initial.png}
-\caption{初始配置的Q表可视化（按动作分类）}
+\caption{Q-table visualization for initial configuration (organized by action)}
 \label{fig:qtable_initial}
 \end{figure}
 
-图\ref{fig:qtable_initial}展示了初始配置下Q表的热力图，四个子图分别对应LEFT、DOWN、RIGHT、UP四个动作。颜色越深表示Q值越大，表示该动作在该状态下的价值越高。
+Figure \ref{fig:qtable_initial} shows the heatmap of the Q-table under the initial configuration. The four subplots correspond to LEFT, DOWN, RIGHT, and UP actions respectively. Darker colors indicate higher Q-values, representing higher value of that action in that state.
 
-\subsection{改变配置的Q表}
+\subsection{Q-Table for Changed Configuration}
 
-改变配置后，由于起点和终点位置发生变化，Q表的值也会相应调整，反映出新的最优路径策略。
+After changing the configuration, due to changes in start and goal positions, the Q-table values adjust accordingly, reflecting the new optimal path strategy.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.9\textwidth]{result/2025-1103-0021/qtable_changed.png}
-\caption{改变配置的Q表可视化（按动作分类）}
+\caption{Q-table visualization for changed configuration (organized by action)}
 \label{fig:qtable_changed}
 \end{figure}
 
-\subsection{Q表收敛前后对比}
+\subsection{Q-Table Before and After Convergence}
 
-\subsubsection{收敛前}
+\subsubsection{Before Convergence}
 
-训练初期（episode 0），Q表初始化为全零：
+At the beginning of training (episode 0), the Q-table is initialized to all zeros:
 \begin{equation}
 Q(s, a) = 0, \quad \forall s, a
 \end{equation}
 
-此时agent主要依赖随机探索（$\epsilon = 0.1$），Q值开始逐渐更新。
+At this stage, the agent mainly relies on random exploration ($\epsilon = 0.1$), and Q-values begin to update gradually.
 
-\subsubsection{收敛后}
+\subsubsection{After Convergence}
 
-训练完成后（episode 5000），Q表已经收敛到接近最优值：
+After training completion (episode 5000), the Q-table has converged to near-optimal values:
 \begin{itemize}
-    \item Q值分布反映了从任意状态到目标状态的最优路径价值
-    \item 靠近终点的状态具有较高的Q值
-    \item Holes周围的Q值较低，表明agent学会了避开这些区域
+    \item Q-value distribution reflects the value of the optimal path from any state to the goal state
+    \item States near the goal have higher Q-values
+    \item Q-values around Holes are lower, indicating that the agent has learned to avoid these areas
 \end{itemize}
 
-两种配置的Q表都成功收敛，能够指导agent找到从起点到终点的最优路径。
+The Q-tables for both configurations have successfully converged and can guide the agent to find the optimal path from start to goal.
 
-\section{收敛性分析}
+\section{Convergence Analysis}
 
-\subsection{初始配置的收敛过程}
+\subsection{Convergence Process for Initial Configuration}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.9\textwidth]{result/2025-1103-0021/convergence_initial.png}
-\caption{初始配置的收敛过程}
+\caption{Convergence process for initial configuration}
 \label{fig:convergence_initial}
 \end{figure}
 
-图\ref{fig:convergence_initial}展示了初始配置下的训练过程：
+Figure \ref{fig:convergence_initial} shows the training process under the initial configuration:
 \begin{itemize}
-    \item \textbf{左图}：Q值收敛曲线。随着训练进行，Q表中的最大Q值逐渐增加并趋于稳定，表明算法正在学习到有效的策略。
-    \item \textbf{右图}：Episode奖励曲线。随着训练进行，agent获得正奖励（到达终点）的频率逐渐增加，最终达到100\%的成功率。
+    \item \textbf{Left plot}: Q-value convergence curve. As training progresses, the maximum Q-value in the Q-table gradually increases and stabilizes, indicating that the algorithm is learning an effective policy.
+    \item \textbf{Right plot}: Episode reward curve. As training progresses, the frequency of the agent obtaining positive rewards (reaching the goal) gradually increases, eventually reaching 100\% success rate.
 \end{itemize}
 
-从收敛曲线可以看出：
+From the convergence curves, we can observe:
 \begin{enumerate}
-    \item 训练初期（episodes 0-500）：Q值快速上升，agent快速学习基本策略
-    \item 训练中期（episodes 500-2000）：Q值继续增长，但增长速度减缓，agent在探索和利用之间平衡
-    \item 训练后期（episodes 2000-5000）：Q值趋于稳定，表明算法已经收敛到接近最优的策略
+    \item Early training (episodes 0-500): Q-values rise rapidly, the agent quickly learns basic strategies
+    \item Mid-training (episodes 500-2000): Q-values continue to grow, but at a slower rate, the agent balances exploration and exploitation
+    \item Late training (episodes 2000-5000): Q-values stabilize, indicating the algorithm has converged to a near-optimal policy
 \end{enumerate}
 
-\subsection{改变配置的收敛过程}
+\subsection{Convergence Process for Changed Configuration}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.9\textwidth]{result/2025-1103-0021/convergence_changed.png}
-\caption{改变配置的收敛过程}
+\caption{Convergence process for changed configuration}
 \label{fig:convergence_changed}
 \end{figure}
 
-图\ref{fig:convergence_changed}展示了改变配置下的收敛过程。由于起点和终点位置的变化，收敛过程可能会有所不同：
+Figure \ref{fig:convergence_changed} shows the convergence process under the changed configuration. Due to changes in start and goal positions, the convergence process may differ:
 \begin{itemize}
-    \item 如果新的起点和终点之间的距离或路径复杂度不同，收敛速度可能不同
-    \item 但整体趋势与初始配置类似：Q值逐渐增长并趋于稳定，成功率逐渐提高
+    \item If the distance or path complexity between the new start and goal positions differs, the convergence speed may vary
+    \item However, the overall trend is similar to the initial configuration: Q-values gradually increase and stabilize, and the success rate gradually improves
 \end{itemize}
 
-\subsection{收敛性对比}
+\subsection{Convergence Comparison}
 
-两种配置的收敛过程都表现出以下特点：
+Both configurations exhibit the following characteristics in their convergence process:
 \begin{enumerate}
-    \item \textbf{快速学习阶段}：前500个episodes内，agent快速学习基本的路径规划策略
-    \item \textbf{优化阶段}：500-2000个episodes内，agent优化路径，提高成功率
-    \item \textbf{稳定收敛阶段}：2000个episodes后，策略趋于稳定，成功率达到100\%
+    \item \textbf{Rapid learning phase}: Within the first 500 episodes, the agent quickly learns basic path planning strategies
+    \item \textbf{Optimization phase}: Between 500-2000 episodes, the agent optimizes the path and improves the success rate
+    \item \textbf{Stable convergence phase}: After 2000 episodes, the policy stabilizes and the success rate reaches 100\%
 \end{enumerate}
 
-高学习率（$\alpha = 0.8$）使得算法能够快速更新Q值，而高折扣因子（$\gamma = 0.95$）确保agent重视长期奖励，从而找到最优路径。
+The high learning rate ($\alpha = 0.8$) enables the algorithm to update Q-values quickly, while the high discount factor ($\gamma = 0.95$) ensures the agent values long-term rewards, thus finding the optimal path.
 
-\section{最优路径分析}
+\section{Optimal Path Analysis}
 
-\subsection{初始配置的最优路径}
+\subsection{Optimal Path for Initial Configuration}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.8\textwidth]{result/2025-1103-0021/path_initial.png}
-\caption{初始配置的最优路径可视化}
+\caption{Optimal path visualization for initial configuration}
 \label{fig:path_initial}
 \end{figure}
 
-图\ref{fig:path_initial}展示了初始配置下学习到的最优路径。从起点(6,1)到终点(6,7)：
+Figure \ref{fig:path_initial} shows the learned optimal path under the initial configuration. From start position (6,1) to goal position (6,7):
 \begin{itemize}
-    \item 蓝色线条表示最优路径
-    \item 绿色方块表示起点(6,1)
-    \item 黄色星形表示终点(6,7)
-    \item 红色区域表示Holes（危险区域）
+    \item Blue line represents the optimal path
+    \item Green square represents the start position (6,1)
+    \item Yellow star represents the goal position (6,7)
+    \item Red areas represent Holes (hazardous areas)
 \end{itemize}
 
-agent学会了避开Holes，选择安全且最短的路径到达终点。
+The agent has learned to avoid Holes and choose a safe and relatively short path to reach the goal.
 
-\subsection{改变配置的最优路径}
+\subsection{Optimal Path for Changed Configuration}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.8\textwidth]{result/2025-1103-0021/path_changed.png}
-\caption{改变配置的最优路径可视化}
+\caption{Optimal path visualization for changed configuration}
 \label{fig:path_changed}
 \end{figure}
 
-图\ref{fig:path_changed}展示了改变配置下的最优路径。由于起点和终点位置随机生成，路径会有所不同，但agent仍然能够学习到避开Holes的最优路径。
+Figure \ref{fig:path_changed} shows the optimal path under the changed configuration. Due to randomly generated start and goal positions, the path may differ, but the agent is still able to learn an optimal path that avoids Holes.
 
-\section{结果分析与观察}
+\section{Results Analysis and Observations}
 
-\subsection{实验结果总结}
-
-\begin{enumerate}
-    \item \textbf{算法有效性}：Q-Learning算法成功学习到了从起点到终点的最优路径，在两种配置下都达到了100\%的成功率。
-    
-    \item \textbf{收敛性能}：算法在约2000个episodes后基本收敛，Q值趋于稳定，表明算法具有良好的收敛性。
-    
-    \item \textbf{路径规划能力}：学习到的策略能够有效避开Holes，选择安全且相对较短的路径到达目标。
-    
-    \item \textbf{泛化能力}：当起点和终点位置改变时，算法能够重新学习并适应新的环境配置。
-\end{enumerate}
-
-\subsection{关键观察}
-
-\subsubsection{1. 探索与利用的平衡}
-
-$\epsilon$-greedy策略在训练过程中发挥了重要作用：
-\begin{itemize}
-    \item 训练初期（$\epsilon = 0.1$）：较高的探索率使得agent能够充分探索环境，发现多种可能的路径
-    \item 训练后期（$\epsilon \approx 0.01$）：较低的探索率使得agent主要利用已学到的策略，提高性能稳定性
-\end{itemize}
-
-\subsubsection{2. Q值的分布特征}
-
-从Q表可视化可以看出：
-\begin{itemize}
-    \item 靠近终点的状态具有较高的Q值
-    \item Holes周围的Q值较低，表明agent学会了惩罚进入危险区域的行为
-    \item Q值呈现梯度分布，从终点向外逐渐减小，符合强化学习的价值传播机制
-\end{itemize}
-
-\subsubsection{3. 超参数的影响}
-
-\begin{itemize}
-    \item \textbf{高学习率（0.8）}：使得算法能够快速学习，但也可能导致Q值波动较大
-    \item \textbf{高折扣因子（0.95）}：重视长期奖励，有助于找到真正的最优策略
-    \item \textbf{探索率衰减}：平衡了训练初期的探索和后期的利用
-\end{itemize}
-
-\subsubsection{4. 环境特性对学习的影响}
-
-\begin{itemize}
-    \item \textbf{确定性动作}：由于is\_slippery=False，动作执行是确定的，这简化了学习过程
-    \item \textbf{Hole处理机制}：阻止进入Hole并给予负奖励，帮助agent快速学会避开危险区域
-    \item \textbf{状态空间大小}：63个状态相对较小，Q表可以完全存储，不会出现状态空间爆炸问题
-\end{itemize}
-
-\subsection{实验结论}
+\subsection{Experimental Results Summary}
 
 \begin{enumerate}
-    \item Q-Learning算法在离散状态空间的路径规划问题中表现优异，能够有效学习最优策略。
+    \item \textbf{Algorithm effectiveness}: The Q-Learning algorithm successfully learned the optimal path from start to goal, achieving 100\% success rate under both configurations.
     
-    \item 超参数的选择对算法性能有重要影响。本实验中使用的高学习率和高折扣因子组合，适合当前的网格环境设置。
+    \item \textbf{Convergence performance}: The algorithm essentially converged after approximately 2000 episodes, with Q-values stabilizing, indicating good convergence properties.
     
-    \item 收敛速度取决于环境的复杂度和起点到终点的距离。简单的路径（如初始配置）收敛更快，复杂的路径可能需要更多episodes。
+    \item \textbf{Path planning capability}: The learned policy can effectively avoid Holes and choose a safe and relatively short path to reach the target.
     
-    \item 算法的鲁棒性良好。即使起点和终点位置改变，算法仍能在相同的训练轮数内收敛到最优策略。
-    
-    \item Q表作为策略的显式表示，具有很好的可解释性。通过可视化Q表，可以直观地理解agent的决策过程。
+    \item \textbf{Generalization ability}: When start and goal positions change, the algorithm can re-learn and adapt to the new environment configuration.
 \end{enumerate}
 
-\subsection{可能的改进方向}
+\subsection{Key Observations}
 
+\subsubsection{1. Balance Between Exploration and Exploitation}
+
+The $\epsilon$-greedy strategy plays an important role during training:
 \begin{itemize}
-    \item \textbf{函数逼近}：对于更大的状态空间，可以考虑使用神经网络等函数逼近方法来替代Q表
-    \item \textbf{经验回放}：引入经验回放机制可以提高样本利用效率
-    \item \textbf{奖励塑形}：设计更细粒度的奖励函数，可以提供更多的学习信号
-    \item \textbf{超参数优化}：通过网格搜索或贝叶斯优化等方法，找到更优的超参数组合
+    \item Early training ($\epsilon = 0.1$): Higher exploration rate allows the agent to fully explore the environment and discover various possible paths
+    \item Late training ($\epsilon \approx 0.01$): Lower exploration rate allows the agent to primarily exploit learned strategies, improving performance stability
 \end{itemize}
 
-\section{结论}
+\subsubsection{2. Q-Value Distribution Characteristics}
 
-本实验成功实现了Q-Learning算法在9×7网格环境中的应用。通过两个不同的配置（初始配置和改变配置），验证了算法的有效性和鲁棒性。实验结果表明：
-
+From the Q-table visualization, we can observe:
 \begin{itemize}
-    \item Q-Learning能够有效学习最优路径规划策略
-    \item 算法具有良好的收敛性能，在约2000个episodes后基本收敛
-    \item 学习到的策略能够成功避开危险区域，找到安全且较短的路径
-    \item 算法对不同的起点和终点配置具有良好的适应能力
+    \item States near the goal have higher Q-values
+    \item Q-values around Holes are lower, indicating the agent has learned to penalize entering hazardous areas
+    \item Q-values show a gradient distribution, gradually decreasing from the goal outward, consistent with the value propagation mechanism in reinforcement learning
 \end{itemize}
 
-这些结果为Q-Learning在实际路径规划问题中的应用提供了有价值的参考。
+\subsubsection{3. Impact of Hyperparameters}
+
+\begin{itemize}
+    \item \textbf{High learning rate (0.8)}: Enables rapid learning, but may also cause larger fluctuations in Q-values
+    \item \textbf{High discount factor (0.95)}: Values long-term rewards, helping to find the truly optimal strategy
+    \item \textbf{Epsilon decay}: Balances exploration in early training and exploitation in later stages
+\end{itemize}
+
+\subsubsection{4. Impact of Environment Characteristics on Learning}
+
+\begin{itemize}
+    \item \textbf{Deterministic actions}: Since is\_slippery=False, action execution is deterministic, which simplifies the learning process
+    \item \textbf{Hole handling mechanism}: Blocking entry to Holes and providing negative rewards helps the agent quickly learn to avoid hazardous areas
+    \item \textbf{State space size}: 63 states is relatively small, allowing complete storage in the Q-table without state space explosion issues
+\end{itemize}
+
+\subsection{Experimental Conclusions}
+
+\begin{enumerate}
+    \item The Q-Learning algorithm performs excellently in path planning problems with discrete state spaces, effectively learning optimal policies.
+    
+    \item Hyperparameter selection has a significant impact on algorithm performance. The combination of high learning rate and high discount factor used in this experiment is suitable for the current grid environment setup.
+    
+    \item Convergence speed depends on environment complexity and the distance from start to goal. Simple paths (such as the initial configuration) converge faster, while complex paths may require more episodes.
+    
+    \item The algorithm has good robustness. Even when start and goal positions change, the algorithm can still converge to the optimal policy within the same number of training episodes.
+    
+    \item The Q-table, as an explicit representation of the policy, has good interpretability. By visualizing the Q-table, we can intuitively understand the agent's decision-making process.
+\end{enumerate}
+
+\subsection{Potential Improvements}
+
+\begin{itemize}
+    \item \textbf{Function approximation}: For larger state spaces, neural networks and other function approximation methods can be considered to replace the Q-table
+    \item \textbf{Experience replay}: Introducing an experience replay mechanism can improve sample utilization efficiency
+    \item \textbf{Reward shaping}: Designing more fine-grained reward functions can provide more learning signals
+    \item \textbf{Hyperparameter optimization}: Finding better hyperparameter combinations through grid search or Bayesian optimization methods
+\end{itemize}
+
+\section{Conclusion}
+
+This experiment successfully implemented the Q-Learning algorithm in a 9×7 grid environment. Through two different configurations (initial and changed), we verified the algorithm's effectiveness and robustness. The experimental results show that:
+
+\begin{itemize}
+    \item Q-Learning can effectively learn optimal path planning policies
+    \item The algorithm has good convergence performance, essentially converging after approximately 2000 episodes
+    \item The learned policy can successfully avoid hazardous areas and find safe and relatively short paths
+    \item The algorithm has good adaptability to different start and goal position configurations
+\end{itemize}
+
+These results provide valuable reference for the application of Q-Learning in practical path planning problems.
 
 \begin{thebibliography}{9}
 \bibitem{watkins1989learning}

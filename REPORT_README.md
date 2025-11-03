@@ -1,20 +1,20 @@
-# Q-Learning 实验报告使用说明
+# Q-Learning Experiment Report Usage Guide
 
-## 文件说明
+## File Description
 
-- `report.tex`: 主LaTeX报告文件
+- `report.tex`: Main LaTeX report file (English)
 
-## 在Overleaf中使用
+## Using in Overleaf
 
-### 步骤1：上传文件
+### Step 1: Upload Files
 
-1. 登录 [Overleaf](https://www.overleaf.com/)
-2. 创建新项目或打开已有项目
-3. 将 `report.tex` 文件上传到项目根目录
+1. Log in to [Overleaf](https://www.overleaf.com/)
+2. Create a new project or open an existing project
+3. Upload the `report.tex` file to the project root directory
 
-### 步骤2：上传图片资源
+### Step 2: Upload Image Resources
 
-需要在Overleaf项目中创建以下目录结构，并上传相应的图片文件：
+Create the following directory structure in your Overleaf project and upload the corresponding image files:
 
 ```
 your-overleaf-project/
@@ -29,104 +29,103 @@ your-overleaf-project/
         └── path_changed.png
 ```
 
-**方法1：直接上传文件夹**
-- 在Overleaf中创建 `result/2025-1103-0021/` 目录
-- 从本地 `result/2025-1103-0021/` 文件夹上传所有PNG图片
+**Method 1: Upload folder directly**
+- Create `result/2025-1103-0021/` directory in Overleaf
+- Upload all PNG images from the local `result/2025-1103-0021/` folder
 
-**方法2：修改图片路径**
-- 如果图片路径不同，可以修改 `report.tex` 中的图片路径
-- 查找 `\includegraphics` 命令，修改路径为你自己的路径
+**Method 2: Modify image paths**
+- If the image paths are different, modify the image paths in `report.tex`
+- Find `\includegraphics` commands and modify paths to your own paths
 
-### 步骤3：设置编译器
+### Step 3: Set Compiler
 
-1. 在Overleaf项目设置中，选择编译器为 **XeLaTeX** 或 **pdfLaTeX**
-2. 由于使用了 `ctex` 包，推荐使用 **XeLaTeX** 编译器以获得更好的中文支持
+1. In Overleaf project settings, select the compiler as **pdfLaTeX** or **XeLaTeX**
+2. Since the report doesn't use Chinese (no `ctex` package), **pdfLaTeX** is recommended
 
-### 步骤4：编译
+### Step 4: Compile
 
-1. 点击 "Recompile" 按钮
-2. 如果遇到编译错误，检查：
-   - 图片文件路径是否正确
-   - 所有必需的LaTeX包是否都已安装（Overleaf通常已包含）
+1. Click the "Recompile" button
+2. If compilation errors occur, check:
+   - Whether image file paths are correct
+   - Whether all required LaTeX packages are installed (Overleaf usually includes them)
 
-## 需要的LaTeX包
+## Required LaTeX Packages
 
-报告使用了以下LaTeX包（Overleaf通常已包含）：
+The report uses the following LaTeX packages (usually included in Overleaf):
 
-- `ctex` - 中文支持
-- `amsmath` - 数学公式
-- `graphicx` - 图片插入
-- `hyperref` - 超链接
-- `geometry` - 页面设置
-- `float` - 浮动体控制
-- `subfigure` - 子图（如果需要修改为subcaption，可能需要更新）
-- `listings` - 代码显示
-- `xcolor` - 颜色支持
-- `booktabs` - 表格美化
+- `amsmath` - Mathematical formulas
+- `graphicx` - Image insertion
+- `hyperref` - Hyperlinks
+- `geometry` - Page settings
+- `float` - Float control
+- `subfigure` - Subfigures (if you need to modify to subcaption, may need to update)
+- `listings` - Code display
+- `xcolor` - Color support
+- `booktabs` - Table beautification
 
-## 图片文件说明
+## Image Files Description
 
-报告引用了以下图片（位于 `result/2025-1103-0021/`）：
+The report references the following images (located in `result/2025-1103-0021/`):
 
-1. `convergence_initial.png` - 初始配置的收敛图
-2. `convergence_changed.png` - 改变配置的收敛图
-3. `qtable_initial.png` - 初始配置的Q表可视化
-4. `qtable_changed.png` - 改变配置的Q表可视化
-5. `path_initial.png` - 初始配置的最优路径
-6. `path_changed.png` - 改变配置的最优路径
+1. `convergence_initial.png` - Convergence plot for initial configuration
+2. `convergence_changed.png` - Convergence plot for changed configuration
+3. `qtable_initial.png` - Q-table visualization for initial configuration
+4. `qtable_changed.png` - Q-table visualization for changed configuration
+5. `path_initial.png` - Optimal path for initial configuration
+6. `path_changed.png` - Optimal path for changed configuration
 
-## 自定义修改
+## Customization
 
-### 修改图片路径
+### Modifying Image Paths
 
-如果图片路径不同，搜索并替换 `report.tex` 中的路径：
+If image paths are different, search and replace paths in `report.tex`:
 
 ```latex
-% 原始路径
+% Original path
 \includegraphics[width=0.9\textwidth]{result/2025-1103-0021/qtable_initial.png}
 
-% 修改为你的路径，例如：
+% Modify to your path, for example:
 \includegraphics[width=0.9\textwidth]{figures/qtable_initial.png}
 ```
 
-### 使用不同日期的结果
+### Using Results from Different Dates
 
-如果使用不同日期生成的结果（例如 `2025-1103-0009`），批量替换路径：
+If using results from a different date (e.g., `2025-1103-0009`), batch replace paths:
 
-1. 在Overleaf的编辑器中，使用查找替换功能（Ctrl+H 或 Cmd+H）
-2. 查找：`result/2025-1103-0021/`
-3. 替换为：`result/2025-1103-0009/`（你的结果文件夹）
+1. In Overleaf editor, use find and replace (Ctrl+H or Cmd+H)
+2. Find: `result/2025-1103-0021/`
+3. Replace with: `result/2025-1103-0009/` (your results folder)
 
-## 报告内容结构
+## Report Content Structure
 
-报告包含以下主要部分：
+The report includes the following main sections:
 
-1. **引言** - Q-Learning算法介绍及其意义
-2. **环境与状态描述** - 网格环境的详细说明
-3. **实验配置** - 两种配置和超参数设置
-4. **Q表分析** - Q值分布和收敛前后对比
-5. **收敛性分析** - 两种配置的收敛过程
-6. **最优路径分析** - 学习到的最优路径可视化
-7. **结果分析与观察** - 实验结果总结和结论
+1. **Introduction** - Q-Learning algorithm introduction and significance
+2. **Environment and State Description** - Detailed description of the grid environment
+3. **Experimental Configuration** - Two configurations and hyperparameter settings
+4. **Q-Table Analysis** - Q-value distribution and before/after convergence comparison
+5. **Convergence Analysis** - Convergence process for both configurations
+6. **Optimal Path Analysis** - Visualization of learned optimal paths
+7. **Results Analysis and Observations** - Summary of experimental results and conclusions
 
-## 注意事项
+## Notes
 
-1. **中文支持**：报告使用了 `ctex` 包，确保使用XeLaTeX编译器
-2. **图片格式**：确保图片是PNG或PDF格式，分辨率足够（建议至少300 DPI）
-3. **编译时间**：第一次编译可能需要较长时间，因为需要处理图片和中文
-4. **版本控制**：Overleaf支持Git，可以连接GitHub进行版本控制
+1. **Language**: The report is written in English
+2. **Image format**: Ensure images are in PNG or PDF format with sufficient resolution (recommended at least 300 DPI)
+3. **Compilation time**: First compilation may take longer due to image processing
+4. **Version control**: Overleaf supports Git, can connect to GitHub for version control
 
-## 编译问题排查
+## Troubleshooting
 
-如果编译失败，常见原因：
+If compilation fails, common reasons:
 
-1. **缺少图片文件**：检查所有图片路径是否正确，文件是否存在
-2. **编码问题**：确保LaTeX文件使用UTF-8编码
-3. **包缺失**：检查是否有缺少的包（Overleaf通常会自动安装）
-4. **编译器选择**：尝试切换XeLaTeX和pdfLaTeX
+1. **Missing image files**: Check if all image paths are correct and files exist
+2. **Encoding issues**: Ensure LaTeX file uses UTF-8 encoding
+3. **Missing packages**: Check if any packages are missing (Overleaf usually auto-installs)
+4. **Compiler selection**: Try switching between XeLaTeX and pdfLaTeX
 
-## 联系信息
+## Contact Information
 
-如有问题，请联系：
-- 作者：liucheng
-- 邮箱：cliu425@connect.hkust-gz.edu.cn
+For questions, please contact:
+- Author: liucheng
+- Email: cliu425@connect.hkust-gz.edu.cn
