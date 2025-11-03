@@ -1,0 +1,394 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{float}
+\usepackage{subfigure}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{booktabs}
+
+\geometry{left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm}
+
+% Code style
+\lstset{
+    language=Python,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue},
+    commentstyle=\color{green!60!black},
+    stringstyle=\color{red},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    frame=single,
+    breaklines=true,
+    captionpos=b
+}
+
+\title{Q-Learning Algorithm for Grid Environment:\\Experimentation and Analysis}
+\author{liucheng\\cliu425@connect.hkust-gz.edu.cn}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+\subsection{Q-Learning Algorithm and Its Significance}
+
+Q-Learning is a model-free reinforcement learning algorithm proposed by Watkins in 1989 \cite{watkins1989learning}. It is a form of Temporal Difference (TD) learning that learns an action-value function $Q(s,a)$ to find the optimal policy.
+
+The core update formula of Q-Learning is:
+\begin{equation}
+Q(s_t, a_t) \leftarrow Q(s_t, a_t) + \alpha \left[ r_{t+1} + \gamma \max_{a'} Q(s_{t+1}, a') - Q(s_t, a_t) \right]
+\end{equation}
+
+where:
+\begin{itemize}
+    \item $\alpha$ is the learning rate, controlling how much new information updates the Q-values
+    \item $\gamma$ is the discount factor, representing the importance of future rewards
+    \item $r_{t+1}$ is the immediate reward obtained after taking the action
+    \item $\max_{a'} Q(s_{t+1}, a')$ is the maximum Q-value of the next state
+\end{itemize}
+
+The significance of the Q-Learning algorithm lies in:
+\begin{enumerate}
+    \item \textbf{Model-free learning}: It does not require a transition probability model of the environment and can learn directly from experience
+    \item \textbf{Off-policy learning}: It can learn the optimal policy without following that policy
+    \item \textbf{Convergence guarantee}: Under certain conditions, Q-Learning can guarantee convergence to the optimal Q-function
+    \item \textbf{Wide applications}: It is suitable for decision problems in discrete state spaces, such as path planning and game AI
+\end{enumerate}
+
+In this experiment, we use the Q-Learning algorithm to solve a path planning problem in a 9×7 grid environment, where an agent needs to move from a start position to a goal position while avoiding dangerous areas (Holes).
+
+\section{Environment and State Description}
+
+\subsection{Environment Setup}
+
+The environment used in this experiment is a custom grid environment based on Gymnasium's FrozenLake environment, with the following specifications:
+
+\begin{itemize}
+    \item \textbf{Grid size}: 9 columns × 7 rows (width = 9, height = 7)
+    \item \textbf{Coordinate system}: User-friendly 1-based coordinate system with bottom-left corner as origin (1,1) and top-right corner as (9,7)
+    \item \textbf{State space}: 63 states in total (9 × 7), where each state corresponds to a position in the grid
+    \item \textbf{Action space}: 4 discrete actions
+    \begin{itemize}
+        \item 0 = LEFT
+        \item 1 = DOWN
+        \item 2 = RIGHT
+        \item 3 = UP
+    \end{itemize}
+\end{itemize}
+
+\subsection{Environment Characteristics}
+
+\subsubsection{Frozen Cells (Hazardous Areas)}
+
+The environment contains 14 Holes (hazardous areas) at the following coordinates:
+\begin{align*}
+\text{Holes} = \{ &(2,4), (3,2), (3,4), (4,4), (5,2), (5,4),\\
+                  &(6,2), (6,4), (7,1), (7,2), (7,4), (7,6),\\
+                  &(7,7), (8,6) \}
+\end{align*}
+
+When the agent attempts to enter a Hole, its movement is blocked and it remains at the current position, receiving a small negative reward (-0.01) to encourage the agent to avoid these areas.
+
+\subsubsection{Reward Mechanism}
+
+\begin{itemize}
+    \item Reaching the goal state: reward +1.0
+    \item Entering a Hole (blocked): reward -0.01
+    \item Other movements: reward 0.0
+\end{itemize}
+
+\subsubsection{Action Execution}
+
+The environment uses deterministic action execution (is\_slippery=False), meaning that executed actions produce expected results without randomness.
+
+\section{Experimental Configuration}
+
+\subsection{Initial Configuration (Configuration 1)}
+
+\begin{itemize}
+    \item \textbf{Start position}: $(6, 1)$
+    \item \textbf{Goal position}: $(6, 7)$
+    \item \textbf{Task}: Find the optimal path from position (6,1) to position (6,7)
+\end{itemize}
+
+This is a relatively simple path planning task where the start and goal positions are in the same column, and the agent needs to move upward while avoiding Holes in between.
+
+\subsection{Changed Configuration (Configuration 2)}
+
+\begin{itemize}
+    \item \textbf{Start position (Position A)}: Randomly generated safe position
+    \item \textbf{Goal position (Position C)}: Randomly generated safe position (different from A)
+    \item \textbf{Task}: Find the optimal path from randomly generated start position A to randomly generated goal position C
+\end{itemize}
+
+This configuration tests the generalization ability and convergence performance of the Q-Learning algorithm with different start and goal position combinations.
+
+\subsection{Q-Learning Hyperparameters}
+
+The following hyperparameter configuration is used in the experiment:
+
+\begin{table}[H]
+\centering
+\caption{Q-Learning Hyperparameter Settings}
+\begin{tabular}{lc}
+\toprule
+Parameter & Value \\
+\midrule
+Learning Rate ($\alpha$) & 0.8 \\
+Discount Factor ($\gamma$) & 0.95 \\
+Initial Epsilon ($\epsilon$) & 0.1 \\
+Epsilon Decay & 0.995 \\
+Epsilon Min & 0.01 \\
+Training Episodes & 5000 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Exploration Strategy}
+
+The $\epsilon$-greedy strategy is used for action selection:
+\begin{equation}
+a_t = \begin{cases}
+\text{random action} & \text{with probability } \epsilon \\
+\arg\max_{a} Q(s_t, a) & \text{with probability } 1-\epsilon
+\end{cases}
+\end{equation}
+
+The exploration rate $\epsilon$ gradually decays from 0.1 to 0.01 during training, balancing exploration and exploitation.
+
+\section{Q-Table Analysis}
+
+\subsection{Q-Table for Initial Configuration}
+
+Under the initial configuration, after training completion, the Q-table values reflect the value of the optimal path from start position (6,1) to goal position (6,7).
+
+The Q-table has dimensions of $63 \times 4$ (63 states, 4 actions per state). After training completion:
+\begin{itemize}
+    \item Non-zero Q-values represent state-action pairs explored by the agent during training
+    \item The magnitude of Q-values reflects the long-term cumulative reward that can be obtained by taking that action
+    \item The optimal action for each state corresponds to the action with the highest Q-value
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{result/2025-1103-0021/qtable_initial.png}
+\caption{Q-table visualization for initial configuration (organized by action)}
+\label{fig:qtable_initial}
+\end{figure}
+
+Figure \ref{fig:qtable_initial} shows the heatmap of the Q-table under the initial configuration. The four subplots correspond to LEFT, DOWN, RIGHT, and UP actions respectively. Darker colors indicate higher Q-values, representing higher value of that action in that state.
+
+\subsection{Q-Table for Changed Configuration}
+
+After changing the configuration, due to changes in start and goal positions, the Q-table values adjust accordingly, reflecting the new optimal path strategy.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{result/2025-1103-0021/qtable_changed.png}
+\caption{Q-table visualization for changed configuration (organized by action)}
+\label{fig:qtable_changed}
+\end{figure}
+
+\subsection{Q-Table Before and After Convergence}
+
+\subsubsection{Before Convergence}
+
+At the beginning of training (episode 0), the Q-table is initialized to all zeros:
+\begin{equation}
+Q(s, a) = 0, \quad \forall s, a
+\end{equation}
+
+At this stage, the agent mainly relies on random exploration ($\epsilon = 0.1$), and Q-values begin to update gradually.
+
+\subsubsection{After Convergence}
+
+After training completion (episode 5000), the Q-table has converged to near-optimal values:
+\begin{itemize}
+    \item Q-value distribution reflects the value of the optimal path from any state to the goal state
+    \item States near the goal have higher Q-values
+    \item Q-values around Holes are lower, indicating that the agent has learned to avoid these areas
+\end{itemize}
+
+The Q-tables for both configurations have successfully converged and can guide the agent to find the optimal path from start to goal.
+
+\section{Convergence Analysis}
+
+\subsection{Convergence Process for Initial Configuration}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{result/2025-1103-0021/convergence_initial.png}
+\caption{Convergence process for initial configuration}
+\label{fig:convergence_initial}
+\end{figure}
+
+Figure \ref{fig:convergence_initial} shows the training process under the initial configuration:
+\begin{itemize}
+    \item \textbf{Left plot}: Q-value convergence curve. As training progresses, the maximum Q-value in the Q-table gradually increases and stabilizes, indicating that the algorithm is learning an effective policy.
+    \item \textbf{Right plot}: Episode reward curve. As training progresses, the frequency of the agent obtaining positive rewards (reaching the goal) gradually increases, eventually reaching 100\% success rate.
+\end{itemize}
+
+From the convergence curves, we can observe:
+\begin{enumerate}
+    \item Early training (episodes 0-500): Q-values rise rapidly, the agent quickly learns basic strategies
+    \item Mid-training (episodes 500-2000): Q-values continue to grow, but at a slower rate, the agent balances exploration and exploitation
+    \item Late training (episodes 2000-5000): Q-values stabilize, indicating the algorithm has converged to a near-optimal policy
+\end{enumerate}
+
+\subsection{Convergence Process for Changed Configuration}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{result/2025-1103-0021/convergence_changed.png}
+\caption{Convergence process for changed configuration}
+\label{fig:convergence_changed}
+\end{figure}
+
+Figure \ref{fig:convergence_changed} shows the convergence process under the changed configuration. Due to changes in start and goal positions, the convergence process may differ:
+\begin{itemize}
+    \item If the distance or path complexity between the new start and goal positions differs, the convergence speed may vary
+    \item However, the overall trend is similar to the initial configuration: Q-values gradually increase and stabilize, and the success rate gradually improves
+\end{itemize}
+
+\subsection{Convergence Comparison}
+
+Both configurations exhibit the following characteristics in their convergence process:
+\begin{enumerate}
+    \item \textbf{Rapid learning phase}: Within the first 500 episodes, the agent quickly learns basic path planning strategies
+    \item \textbf{Optimization phase}: Between 500-2000 episodes, the agent optimizes the path and improves the success rate
+    \item \textbf{Stable convergence phase}: After 2000 episodes, the policy stabilizes and the success rate reaches 100\%
+\end{enumerate}
+
+The high learning rate ($\alpha = 0.8$) enables the algorithm to update Q-values quickly, while the high discount factor ($\gamma = 0.95$) ensures the agent values long-term rewards, thus finding the optimal path.
+
+\section{Optimal Path Analysis}
+
+\subsection{Optimal Path for Initial Configuration}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{result/2025-1103-0021/path_initial.png}
+\caption{Optimal path visualization for initial configuration}
+\label{fig:path_initial}
+\end{figure}
+
+Figure \ref{fig:path_initial} shows the learned optimal path under the initial configuration. From start position (6,1) to goal position (6,7):
+\begin{itemize}
+    \item Blue line represents the optimal path
+    \item Green square represents the start position (6,1)
+    \item Yellow star represents the goal position (6,7)
+    \item Red areas represent Holes (hazardous areas)
+\end{itemize}
+
+The agent has learned to avoid Holes and choose a safe and relatively short path to reach the goal.
+
+\subsection{Optimal Path for Changed Configuration}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{result/2025-1103-0021/path_changed.png}
+\caption{Optimal path visualization for changed configuration}
+\label{fig:path_changed}
+\end{figure}
+
+Figure \ref{fig:path_changed} shows the optimal path under the changed configuration. Due to randomly generated start and goal positions, the path may differ, but the agent is still able to learn an optimal path that avoids Holes.
+
+\section{Results Analysis and Observations}
+
+\subsection{Experimental Results Summary}
+
+\begin{enumerate}
+    \item \textbf{Algorithm effectiveness}: The Q-Learning algorithm successfully learned the optimal path from start to goal, achieving 100\% success rate under both configurations.
+    
+    \item \textbf{Convergence performance}: The algorithm essentially converged after approximately 2000 episodes, with Q-values stabilizing, indicating good convergence properties.
+    
+    \item \textbf{Path planning capability}: The learned policy can effectively avoid Holes and choose a safe and relatively short path to reach the target.
+    
+    \item \textbf{Generalization ability}: When start and goal positions change, the algorithm can re-learn and adapt to the new environment configuration.
+\end{enumerate}
+
+\subsection{Key Observations}
+
+\subsubsection{1. Balance Between Exploration and Exploitation}
+
+The $\epsilon$-greedy strategy plays an important role during training:
+\begin{itemize}
+    \item Early training ($\epsilon = 0.1$): Higher exploration rate allows the agent to fully explore the environment and discover various possible paths
+    \item Late training ($\epsilon \approx 0.01$): Lower exploration rate allows the agent to primarily exploit learned strategies, improving performance stability
+\end{itemize}
+
+\subsubsection{2. Q-Value Distribution Characteristics}
+
+From the Q-table visualization, we can observe:
+\begin{itemize}
+    \item States near the goal have higher Q-values
+    \item Q-values around Holes are lower, indicating the agent has learned to penalize entering hazardous areas
+    \item Q-values show a gradient distribution, gradually decreasing from the goal outward, consistent with the value propagation mechanism in reinforcement learning
+\end{itemize}
+
+\subsubsection{3. Impact of Hyperparameters}
+
+\begin{itemize}
+    \item \textbf{High learning rate (0.8)}: Enables rapid learning, but may also cause larger fluctuations in Q-values
+    \item \textbf{High discount factor (0.95)}: Values long-term rewards, helping to find the truly optimal strategy
+    \item \textbf{Epsilon decay}: Balances exploration in early training and exploitation in later stages
+\end{itemize}
+
+\subsubsection{4. Impact of Environment Characteristics on Learning}
+
+\begin{itemize}
+    \item \textbf{Deterministic actions}: Since is\_slippery=False, action execution is deterministic, which simplifies the learning process
+    \item \textbf{Hole handling mechanism}: Blocking entry to Holes and providing negative rewards helps the agent quickly learn to avoid hazardous areas
+    \item \textbf{State space size}: 63 states is relatively small, allowing complete storage in the Q-table without state space explosion issues
+\end{itemize}
+
+\subsection{Experimental Conclusions}
+
+\begin{enumerate}
+    \item The Q-Learning algorithm performs excellently in path planning problems with discrete state spaces, effectively learning optimal policies.
+    
+    \item Hyperparameter selection has a significant impact on algorithm performance. The combination of high learning rate and high discount factor used in this experiment is suitable for the current grid environment setup.
+    
+    \item Convergence speed depends on environment complexity and the distance from start to goal. Simple paths (such as the initial configuration) converge faster, while complex paths may require more episodes.
+    
+    \item The algorithm has good robustness. Even when start and goal positions change, the algorithm can still converge to the optimal policy within the same number of training episodes.
+    
+    \item The Q-table, as an explicit representation of the policy, has good interpretability. By visualizing the Q-table, we can intuitively understand the agent's decision-making process.
+\end{enumerate}
+
+\subsection{Potential Improvements}
+
+\begin{itemize}
+    \item \textbf{Function approximation}: For larger state spaces, neural networks and other function approximation methods can be considered to replace the Q-table
+    \item \textbf{Experience replay}: Introducing an experience replay mechanism can improve sample utilization efficiency
+    \item \textbf{Reward shaping}: Designing more fine-grained reward functions can provide more learning signals
+    \item \textbf{Hyperparameter optimization}: Finding better hyperparameter combinations through grid search or Bayesian optimization methods
+\end{itemize}
+
+\section{Conclusion}
+
+This experiment successfully implemented the Q-Learning algorithm in a 9×7 grid environment. Through two different configurations (initial and changed), we verified the algorithm's effectiveness and robustness. The experimental results show that:
+
+\begin{itemize}
+    \item Q-Learning can effectively learn optimal path planning policies
+    \item The algorithm has good convergence performance, essentially converging after approximately 2000 episodes
+    \item The learned policy can successfully avoid hazardous areas and find safe and relatively short paths
+    \item The algorithm has good adaptability to different start and goal position configurations
+\end{itemize}
+
+These results provide valuable reference for the application of Q-Learning in practical path planning problems.
+
+\begin{thebibliography}{9}
+\bibitem{watkins1989learning}
+Watkins, C. J. C. H., \& Dayan, P. (1992). Q-learning. \textit{Machine learning}, 8(3-4), 279-292.
+
+\bibitem{sutton2018reinforcement}
+Sutton, R. S., \& Barto, A. G. (2018). \textit{Reinforcement learning: An introduction}. MIT press.
+\end{thebibliography}
+
+\end{document}
